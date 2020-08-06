@@ -1,0 +1,69 @@
+/***********************************************************************
+/
+/  GRID CLASS (IDENTIFY THE SPECIES FIELDS FOR SIMON GLOVER'S COOLING)
+/
+/  written by: Britton Smith
+/  date:       September, 2007
+/  modified1:
+/
+/  PURPOSE:
+/
+/  NOTE:
+/
+************************************************************************/
+ 
+#include <stdio.h>
+#include "ErrorExceptions.h"
+#include "macros_and_parameters.h"
+#include "typedefs.h"
+#include "global_data.h"
+#include "Fluxes.h"
+#include "GridList.h"
+#include "ExternalBoundary.h"
+#include "Grid.h"
+#include "fortran.def"
+ 
+/* function prototypes */
+ 
+int FindField(int f, int farray[], int n);
+
+
+int grid::IdentifyDengoSpeciesFields(
+{%- for s in network.chemical_species | sort -%} 
+int &{{s.name}}Num
+{%- if not loop.last %}, {%- endif %}
+{%- endfor %})
+{
+    {%- for s in network.chemical_species | sort -%}
+    {%- if s.name != "ge" %}
+    {{s.name}}Num = 0; 
+    {%- endif %}
+    {%- endfor %}
+
+    {%- for s in network.chemical_species | sort %}
+    {%- if s.name != "ge" %}
+    {{s.name}}Num = FindField({{s.name}}Density, FieldType, NumberOfBaryonFields);
+    {%- endif %}
+    {%- endfor %}
+
+    if (
+    {%- for s in network.chemical_species | sort -%}
+    {%- if s.name != "ge" -%}
+    ({{s.name}}Num < 0) 
+    {%- if not loop.last -%}
+    || 
+    {%- endif %}
+    {%- endif %}
+    {%- endfor %}
+    ){
+    
+    ENZO_VFAIL("De=%"ISYM", HI=%"ISYM", HII=%"ISYM", HeI=%"ISYM", HeII=%"ISYM", HeIII=%"ISYM"\n", deNum, H_1Num, H_2Num, He_1Num, He_2Num);
+
+    ENZO_VFAIL("Error identifying species for DengoChemistryModel = %"ISYM".\n",
+        DengoChemistryModel)
+
+    }
+
+    return SUCCESS;
+}
+ 
