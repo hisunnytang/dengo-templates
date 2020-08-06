@@ -1,0 +1,168 @@
+#;-*-C-*-
+
+# AMR PROBLEM DEFINITION FILE: Cosmology Simulation
+# This is a small cosmology simulation that runs to z = 0.
+# The redshift outputs can be used to create a light-cone out to z = 0.1.
+#
+# define problem
+#
+
+
+# Relevant Section of Enzo Paramter File (NOT COMPLETE!) 
+ProblemType                              = 30      // cosmology simulation
+TopGridRank                              = 3
+TopGridDimensions                        = 128 128 128
+SelfGravity                              = 1       // gravity on
+TopGridGravityBoundary                   = 0       // Periodic BC for gravity
+LeftFaceBoundaryCondition                = 3 3 3   // same for fluid
+RightFaceBoundaryCondition               = 3 3 3
+RefineBy                                 = 2
+
+#
+CosmologySimulationOmegaBaryonNow        = 0.045
+CosmologySimulationOmegaCDMNow           = 0.231
+CosmologySimulationDensityName           = GridDensity
+CosmologySimulationVelocity1Name         = GridVelocities_x
+CosmologySimulationVelocity2Name         = GridVelocities_y
+CosmologySimulationVelocity3Name         = GridVelocities_z
+CosmologySimulationCalculatePositions    = 1
+CosmologySimulationParticleVelocity1Name = ParticleVelocities_x
+CosmologySimulationParticleVelocity2Name = ParticleVelocities_y
+CosmologySimulationParticleVelocity3Name = ParticleVelocities_z
+CosmologySimulationParticleDisplacement1Name = ParticleDisplacements_x
+CosmologySimulationParticleDisplacement2Name = ParticleDisplacements_y
+CosmologySimulationParticleDisplacement3Name = ParticleDisplacements_z
+
+#
+#  define cosmology parameters
+#
+ComovingCoordinates                      = 1       // Expansion ON
+#CosmologyOmegaMatterNow                  = 0.276
+CosmologyOmegaDarkMatterNow              = 0.276
+CosmologyOmegaLambdaNow                  = 0.724
+CosmologyHubbleConstantNow               = 0.703     // in 100 km/s/Mpc
+CosmologyComovingBoxSize                 = 0.3    // in Mpc/h
+CosmologyMaxExpansionRate                = 0.015   // maximum allowed delta(a)/a
+CosmologyInitialRedshift                 = 100      //
+CosmologyFinalRedshift                   = 0       //
+eravitationalConstant                    = 1       // this must be true for cosmology
+#
+#
+ParallelRootGridIO                       = 1
+ParallelParticleIO                       = 1
+PartitionNestedGrids                     = 1
+CosmologySimulationNumberOfInitialGrids  = 1
+
+
+#
+# I/O and stop/start parameters
+#
+dtDataDump       = 5
+CycleSkipDataDump = 1 
+RedshiftDumpName = RD
+RedshiftDumpDir  = RD
+DataDumpName     = DD
+DataDumpDir      = DD
+OutputCoolingTime = 1
+OutputTemperature = 1
+OutputFirstTimeAtLevel = 3
+
+CosmologyOutputRedshift[1] = 49.6
+CosmologyOutputRedshift[2] = 26.0
+CosmologyOutputRedshift[3] = 25.0
+CosmologyOutputRedshift[4] = 24.0
+CosmologyOutputRedshift[5] = 23.0
+CosmologyOutputRedshift[6] = 22.0
+CosmologyOutputRedshift[7] = 21.0
+CosmologyOutputRedshift[8] = 20.0
+CosmologyOutputRedshift[9] = 19.0
+CosmologyOutputRedshift[10] = 19.0
+CosmologyOutputRedshift[11] = 18.8
+CosmologyOutputRedshift[12] = 18.6
+CosmologyOutputRedshift[13] = 18.4
+CosmologyOutputRedshift[14] = 18.2
+CosmologyOutputRedshift[15] = 18.0
+#
+# hydro parameters
+#
+HydroMethod                 = 0       // PPM
+Gamma                       = 1.6667
+PPMDiffusionParameter       = 0       // diffusion off
+DualEnergyFormalism         = 1       // use total & internal energy
+InterpolationMethod         = 1       // SecondOrderA
+FluxCorrection              = 1
+ConservativeInterpolation   = 1
+CourantSafetyNumber         = 0.5
+ParticleCourantSafetyNumber = 0.8
+UseMinimumPressureSupport   = 0
+
+#
+# grid refinement parameters
+#
+StaticHierarchy                       = 1
+MaximumRefinementLevel                = 32 
+MaximumGravityRefinementLevel         = 32
+MaximumParticleRefinementLevel        = 8
+RefineBy                              = 2
+CellFlaggingMethod                    = 2 4 6 8
+MinimumOverDensityForRefinement       = 1.0 1.0
+MinimumMassForRefinementLevelExponent = 0.0 0.0
+MinimumEfficiency                     = 0.35
+#MustRefineParticlesCreateParticles = 3
+#MustRefineParticlesRefineToLevel   = 3
+CosmologySimulationParticleTypeName          = RefinementMask
+RefineByJeansLengthSafetyFactor    = 8 
+#
+# microphysics parameters
+#
+RadiativeCooling        = 1
+use_grackle             = 0
+use_dengo = 1
+MultiSpecies            = 0 // sets grackle.primordial_chemistry
+MetalCooling            = 0 // sets grackle.metal_cooling
+grackle_data_file       = CloudyData_UVB=HM2012.h5
+UVbackground            = 0
+CMBTemperatureFloor     = 1 // sets grackle.cmb_temperature_floor
+ThreeBodyRate = 4
+CIECooling = 1
+H2OpticalDepthApproximation = 1
+#
+# star formation parameters
+#
+#StarParticleCreation          = 1
+#StarParticleFeedback          = 1
+#StarMakerOverDensityThreshold = 100
+#StarMakerMinimumMass          = 1e6
+#StarMakerMinimumDynamicalTime = 1e6
+#StarMakerMassEfficiency       = 0.1
+#StarMassEjectionFraction      = 0.25
+#StarMetalYield                = 0.1
+#StarEnergyToThermalFeedback   = 1e-5
+#StarFeedbackDistRadius        = 1
+#StarFeedbackDistCellStep      = 3
+
+#
+# some global parameters
+#
+GreensFunctionMaxNumber = 40
+
+
+# Dengo-Related
+#
+DengoChemistryModel = 1
+
+GravitationalConstant                    = 1       // this must be true for cosmology
+
+dengo_reltol = 1.0e-3
+dengo_data_file = /home/kwoksun2/dengo_install/primordial_tables.h5
+
+CosmologySimulationH2_1Fraction = 2e-20
+CosmologySimulationH2_2Fraction = 3.0e-14
+CosmologySimulationH_1Fraction = 0.76
+CosmologySimulationH_2Fraction = 1.2e-5
+CosmologySimulationH_m0Fraction = 2.0e-9
+CosmologySimulationHe_1Fraction = 0.24
+CosmologySimulationHe_2Fraction = 1e-14
+CosmologySimulationHe_3Fraction = 1e-17
+CosmologySimulationdeFraction = 1.0e-5
+
