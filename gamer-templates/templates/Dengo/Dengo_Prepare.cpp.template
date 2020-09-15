@@ -1,0 +1,199 @@
+#include "GAMER.h"
+
+#ifdef SUPPORT_DENGO
+
+
+// global variables for accessing h_Che_Array[]
+// --> declared in Init_MemAllocate_Dengo.cpp
+extern int Che_NField;
+extern int CheIdx_Dens;
+extern int CheIdx_sEint;
+extern int CheIdx_Ent;
+
+{%- for s in network.required_species | sort %}
+{%- if s != network.energy_term %}
+extern int CheIdx_{{s.name}};
+{%- endif %}
+{%- endfor %}
+extern int CheIdx_CoolingTime;
+
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Dengo_Prepare
+// Description :  Fill up the input host array h_Che_Array[] for the Dengo solver
+//
+// Note        :  1. Prepare Che_NField variables
+//                   --> Che_NField and the corresponding array indices in h_Che_Array[] (e.g., CheIdx_Dens)
+//                       are declared and set by Init_MemAllocate_Dengo()
+//                2. This function always prepares the latest FluSg data
+//
+// Parameter   :  lv          : Target refinement level
+//                h_Che_Array : Host array to store the prepared data
+//                NPG         : Number of patch groups prepared at a time
+//                PID0_List   : List recording the patch indices with LocalID==0 to be udpated
+//-------------------------------------------------------------------------------------------------------
+void Dengo_Prepare( const int lv, real h_Che_Array[], const int NPG, const int *PID0_List )
+{
+
+// check
+#  ifdef GAMER_DEBUG
+   if ( CheIdx_Dens == Idx_Undefined )
+      Aux_Error( ERROR_INFO, "CheIdx_Dens is undefined !!\n" );
+   if ( CheIdx_sEint == Idx_Undefined )
+      Aux_Error( ERROR_INFO, "CheIdx_sEint is undefined !!\n" );
+   if ( CheIdx_Ent == Idx_Undefined )
+      Aux_Error( ERROR_INFO, "CheIdx_Ent is undefined !!\n" );
+
+   {%- for s in network.required_species | sort %}
+   {%- if s != network.energy_term %}
+   if ( Idx_{{s.name}} || CheIdx_{{s.name}} == Idx_Undefined )
+       Aux_Error( ERROR_INFO, "[Che]Idx_{{s.name}} is undefined for DENGO !!\n" );
+   {%- endif %}
+   {%- endfor %}
+   if ( Idx_CoolingTime || CheIdx_CoolingTime == Idx_Undefined )
+       Aux_Error( ERROR_INFO, "[Che]Idx_CoolingTime is undefined for DENGO !!\n" );
+
+#  endif // #ifdef GAMER_DEBUG
+
+
+   const int  Size1pg          = CUBE(PS2);
+   const int  Size1v           = NPG*Size1pg;
+   const real MassRatio_pe    = Const_mp / Const_me;
+#  ifdef DUAL_ENERGY
+   const bool CheckMinPres_No  = false;
+#  else
+   const bool CheckMinEint_Yes = true;
+#  endif
+
+   real *Ptr_Dens0  = h_Che_Array + CheIdx_Dens *Size1v;
+   real *Ptr_sEint0 = h_Che_Array + CheIdx_sEint*Size1v;
+   real *Ptr_Ent0   = h_Che_Array + CheIdx_Ent  *Size1v;
+
+   {%- for s in network.required_species | sort %}
+   {%- if s != network.energy_term %}
+   real *Ptr_{{s.name}}0 = h_Che_Array + CheIdx_{{s.name}} *Size1v;
+   {%- endif %}
+   {%- endfor %}
+   real *Ptr_CoolingTime0 = h_Che_Array + CheIdx_CoolingTime *Size1v;
+
+#  pragma omp parallel
+   {
+
+// thread-private variables
+   int  idx_p, idx_pg, PID, PID0, offset;    // idx_p/idx_pg: array indices within a patch/patch group
+   real Dens, Etot, Eint, Ent;
+#  ifdef DUAL_ENERGY
+   real Pres;
+#  else
+   real Px, Py, Pz, Emag=NULL_REAL;
+#  endif // #ifdef DUAL_ENERGY ... else ...
+   real (*fluid)[PS1][PS1][PS1]=NULL;
+
+   real *Ptr_Dens=NULL, *Ptr_sEint=NULL, *Ptr_Ent=NULL, *Ptr_e=NULL; 
+   {%- for s in network.required_species | sort %}
+   {%- if s != network.energy_term %}
+   real *Ptr_{{s.name}} = NULL;
+   {%- endif %}
+   {%- endfor %}
+   real *Ptr_CoolingTime = NULL;
+
+#  pragma omp for schedule( static )
+   for (int TID=0; TID<NPG; TID++)
+   {
+      PID0      = PID0_List[TID];
+      idx_pg    = 0;
+      offset    = TID*Size1pg;
+
+      Ptr_Dens  = Ptr_Dens0  + offset;
+      Ptr_sEint = Ptr_sEint0 + offset;
+      Ptr_Ent   = Ptr_Ent0   + offset;
+
+      {%- for s in network.required_species | sort %}
+      {%- if s != network.energy_term %}
+      Ptr_{{s.name}} = Ptr_{{s.name}}0 + offset;
+      {%- endif %}
+      {%- endfor %}
+      Ptr_CoolingTime = Ptr_CoolingTime0 + offset;
+
+
+      for (int LocalID=0; LocalID<8; LocalID++)
+      {
+         PID   = PID0 + LocalID;
+         idx_p = 0;
+         fluid = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid;
+
+         for (int k=0; k<PS1; k++)
+         for (int j=0; j<PS1; j++)
+         for (int i=0; i<PS1; i++)
+         {
+            Dens = *( fluid[DENS][0][0] + idx_p );
+            Etot = *( fluid[ENGY][0][0] + idx_p );
+
+//          use the dual-energy variable to calculate the internal energy if applicable
+#           ifdef DUAL_ENERGY
+
+#           if   ( DUAL_ENERGY == DE_ENPY )
+            Pres = Hydro_DensEntropy2Pres( Dens, *(fluid[ENPY][0][0]+idx_p), EoS_AuxArray[1], CheckMinPres_No, NULL_REAL );
+            Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray );   // EOS_GAMMA does not involve passive scalars
+#           elif ( DUAL_ENERGY == DE_EINT )
+#           error : DE_EINT is NOT supported yet !!
+#           endif
+
+#           else // #ifdef DUAL_ENERGY
+
+            Px   = *( fluid[MOMX][0][0] + idx_p );
+            Py   = *( fluid[MOMY][0][0] + idx_p );
+            Pz   = *( fluid[MOMZ][0][0] + idx_p );
+#           ifdef MHD
+            Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
+#           endif
+            Eint = Hydro_Con2Eint( Dens, Px, Py, Pz, Etot, CheckMinEint_Yes, MIN_EINT, Emag );
+
+#           endif // #ifdef DUAL_ENERGY ... else
+
+//          mandatory fields
+            Ptr_Dens [idx_pg] = Dens;
+            Ptr_sEint[idx_pg] = Eint / Dens;
+            Ptr_Ent  [idx_pg] = Etot - Eint; // non-thermal energy density
+
+            {%- for s in network.required_species | sort %}
+            {%- if s != network.energy_term %}
+            {%- if s.name == "de" %}
+            Ptr_{{s.name}}[idx_pg] = *( fluid[Idx_{{s.name}}][0][0] + idx_p )* MassRatio_pe;
+            {%- else %}
+            Ptr_{{s.name}}[idx_pg] = *( fluid[Idx_{{s.name}}][0][0] + idx_p );
+            {%- endif %}
+            {%- endif %}
+            {%- endfor %}
+            Ptr_CoolingTime[idx_pg] = *( fluid[Idx_CoolingTime][0][0] + idx_p );
+
+            idx_p  ++;
+            idx_pg ++;
+         } // i,j,k
+
+      } // for (int LocalID=0; LocalID<8; LocalID++)
+   } // for (int TID=0; TID<NPG; TID++)
+
+   } // end of OpenMP parallel region
+
+
+// set cell size and link pointers for different fields
+   //Che_FieldData->grid_dx         = amr->dh[lv];
+
+   Che_FieldData->density         = Ptr_Dens0;
+
+   {%- for s in network.required_species | sort %}
+   {%- if s != network.energy_term %}
+   Che_FieldData->{{s.name}}_density = Ptr_{{s.name}}0;
+   {%- endif %}
+   {%- endfor %}
+   Che_FieldData->ge_density = Ptr_sEint0;
+   Che_FieldData->CoolingTime = Ptr_CoolingTime0;
+
+} // FUNCTION : Dengo_Prepare
+
+
+
+#endif // #ifdef SUPPORT_DENGO

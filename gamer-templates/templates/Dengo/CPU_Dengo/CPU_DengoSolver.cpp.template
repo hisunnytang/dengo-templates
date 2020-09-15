@@ -1,0 +1,55 @@
+#include "GAMER.h"
+
+#ifdef SUPPORT_DENGO
+
+
+
+
+//-----------------------------------------------------------------------------------------
+// Function    :  CPU_DengoSolver
+// Description :  Update the internal energy by the various cooling and heating mechanisms
+//                in the original Dengo library
+//
+// Note        :  1. Currently it is used even when GPU is enabled
+//
+// Parameter   :  Che_FieldData : Array of Dengo "dengo_field_data" objects
+//                Che_Units     : Dengo "code_units" object
+//                NPatchGroup   : Number of patch groups to be evaluated
+//                dt            : Time interval to advance solution
+//-----------------------------------------------------------------------------------------
+void CPU_DengoSolver( dengo_field_data *Che_FieldData, code_units Che_Units, const int NPatchGroup, const real dt )
+{
+
+// set grid_dimension, grid_start, and grid_end
+   const int OptFac = 16;  // optimization factor
+   if ( SQR(PS2)%OptFac != 0 )   Aux_Error( ERROR_INFO, "SQR(PS2) %% OptFac != 0 !!\n" );
+
+   Che_FieldData->grid_dimension[0] = PS2;
+   Che_FieldData->grid_dimension[1] = PS2;
+   Che_FieldData->grid_dimension[2] = PS2*NPatchGroup;
+
+   for (int d=0; d<3; d++)
+   {
+      Che_FieldData->grid_start[d] = 0;
+      Che_FieldData->grid_end  [d] = Che_FieldData->grid_dimension[d] - 1;
+   }
+
+   Che_FieldData->ncells          = (unsigned long) CUBE(PS2)* NPatchGroup;
+   Che_FieldData->reltol          = DENGO_RELTOL;
+   Che_FieldData->floor_value     = DENGO_FLOOR_VALUE;
+   Che_FieldData->dengo_data_file = DENGO_DATA_TABLE;
+
+   // invoke Dengo
+   // --> note that we use the OpenMP implementation in Dengo directly
+   if (  {{solver_name}}_solve_chemistry( &Che_Units, Che_FieldData, dt ) == 0  )
+      Aux_Error( ERROR_INFO, "Dengo solve_chemistry() failed !!\n" );
+
+   // we also calculate the cooling time here
+   // and cooling time is treated kind of as a passive scalar
+   if (  dengo_estimate_cooling_time_enzo( &Che_Units, Che_FieldData ) == 0  )
+      Aux_Error( ERROR_INFO, "Dengo cooling_time() failed !!\n" );
+} // FUNCTION : CPU_DengoSolver
+
+
+
+#endif // #ifdef SUPPORT_DENGO

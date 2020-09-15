@@ -1,0 +1,68 @@
+#include "GAMER.h"
+
+#ifdef SUPPORT_DENGO
+
+
+// global variables for accessing h_Che_Array[]
+// --> also used by Dengo_Prepare.cpp and Dengo_Close.cpp
+// --> they are not declared in "Global.h" simply because they are only used by a few Dengo routines
+
+
+// basic hydro variables
+int Che_NField   = NULL_INT;
+int CheIdx_Dens  = Idx_Undefined;
+int CheIdx_sEint = Idx_Undefined;
+int CheIdx_Ent   = Idx_Undefined;
+
+// index for passive scalar
+{%- for s in network.required_species | sort %}
+{%- if s != network.energy_term %}
+int CheIdx_{{s.name}} = Idx_Undefined;
+{%- endif %}
+{%- endfor %}
+int CheIdx_CoolingTime = Idx_Undefined;
+
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Init_MemAllocate_Dengo
+// Description :  Allocate the CPU memory for the Dengo solver
+//
+// Note        :  1. Work even when GPU is enabled
+//                2. Invoked by Init_MemAllocate()
+//                3. Also set global variables for accessing h_Che_Array[]
+//                   --> Declared on the top of this file
+//
+// Parameter   :  Che_NPG : Number of patch groups to be evaluated at a time
+//-------------------------------------------------------------------------------------------------------
+void Init_MemAllocate_Dengo( const int Che_NPG )
+{
+
+// nothing to do if Dengo is disabled
+   if ( !DENGO_ACTIVATE )   return;
+
+
+// set global variables related to h_Che_Array[]
+   Che_NField   = 0;
+
+   CheIdx_Dens  = Che_NField ++;
+   CheIdx_sEint = Che_NField ++;
+   CheIdx_Ent   = Che_NField ++;
+   
+   {%- for s in network.required_species | sort %}
+   {%- if s != network.energy_term %}
+   CheIdx_{{s.name}} = Che_NField++;
+   {%- endif %}
+   {%- endfor %}
+   CheIdx_CoolingTime = Che_NField++;
+
+// allocate the input/output array for the Dengo solver
+   for (int t=0; t<2; t++)
+      h_Che_Array[t] = new real [ (long)Che_NField*(long)Che_NPG*(long)CUBE(PS2) ];
+
+} // FUNCTION : Init_MemAllocate_Dengo
+
+
+
+#endif // #ifdef SUPPORT_DENGO

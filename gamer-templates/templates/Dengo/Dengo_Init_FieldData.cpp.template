@@ -1,0 +1,78 @@
+#include "GAMER.h"
+
+#ifdef SUPPORT_DENGO
+
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Dengo_Init_FieldData
+// Description :  Initialize the "Che_FieldData" dengo_field_data object of Dengo
+//
+// Note        :  1. Invoked by Dengo_Init()
+//                   --> "Che_FieldData" is freed by End_MemFree()
+//
+// Parameter   :  None
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void Dengo_Init_FieldData()
+{
+
+// nothing to do if Dengo is disabled
+   if ( !DENGO_ACTIVATE )   return;
+
+
+// allocate memory
+   Che_FieldData = new dengo_field_data;
+
+
+// initialization
+   const int NDim = 3;
+
+// fields not evolving with time
+//   Che_FieldData->grid_rank               = NDim;
+   Che_FieldData->grid_dimension          = new int [NDim];
+   Che_FieldData->grid_start              = new int [NDim];
+   Che_FieldData->grid_end                = new int [NDim];
+
+// grid_dimension, grid_start, and grid_end are set by CPU_DengoSolver() since the number
+// of patch groups advanced at a time is not a constant
+   /*
+   for (int d=0; d<NDim; d++)
+   {
+      Che_FieldData->grid_dimension[d]    = PS2;
+      Che_FieldData->grid_start    [d]    = 0;
+      Che_FieldData->grid_end      [d]    = PS2 - 1;
+   }
+   */
+
+// fields set by Dengo_Prepare() during each time-step
+   Che_FieldData->density                 = NULL;
+
+   {%- for s in network.required_species | sort %}
+   Che_FieldData->{{s.name}}_density = NULL;
+   {%- endfor %}
+   Che_FieldData->CoolingTime = NULL;
+
+   Che_FieldData->dengo_data_file = DENGO_DATA_TABLE;
+// fields not supported yet
+// Dengo: no clue what this is yet...
+/*
+   Che_FieldData->x_velocity              = NULL;
+   Che_FieldData->y_velocity              = NULL;
+   Che_FieldData->z_velocity              = NULL;
+   Che_FieldData->volumetric_heating_rate = NULL;
+   Che_FieldData->specific_heating_rate   = NULL;
+   Che_FieldData->RT_HI_ionization_rate   = NULL;
+   Che_FieldData->RT_HeI_ionization_rate  = NULL;
+   Che_FieldData->RT_HeII_ionization_rate = NULL;
+   Che_FieldData->RT_H2_dissociation_rate = NULL;
+   Che_FieldData->RT_heating_rate         = NULL;
+*/
+
+} // FUNCTION : Dengo_Init_FieldData
+
+
+
+#endif // #ifdef SUPPORT_DENGO
