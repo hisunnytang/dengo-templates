@@ -176,7 +176,7 @@ def runGAMERTestProblem(gamer_dir, simu_dir="playground"):
     #    f.write(out.stdout.read())
     os.chdir(current_path)
 
-def runGrackleGAMER(gamer_dir, simu_dir="playgroun_grackle"):
+def runGrackleGAMER(gamer_dir, simu_dir="playground_grackle"):
     buildGAMER         (gamer_dir, use_grackle=True)
     runGAMERTestProblem(gamer_dir, simu_dir)
 
