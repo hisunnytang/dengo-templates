@@ -41,7 +41,7 @@ void CPU_DengoSolver( dengo_field_data *Che_FieldData, code_units Che_Units, con
 
    // invoke Dengo
    // --> note that we use the OpenMP implementation in Dengo directly
-   if (  {{solver_name}}_solve_chemistry( &Che_Units, Che_FieldData, dt ) == 0  )
+   if (  {{solver_name}}_solve_chemistry_enzo( &Che_Units, Che_FieldData, dt ) == 0  )
       Aux_Error( ERROR_INFO, "Dengo solve_chemistry() failed !!\n" );
 
    // we also calculate the cooling time here
