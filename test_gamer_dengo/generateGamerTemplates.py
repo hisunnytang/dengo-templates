@@ -87,11 +87,11 @@ def write_network(network):
 
 
 
-def write_from_templates(network, searchpath=".", outdir="."):
+def write_from_templates(network, solver_name, searchpath=".", outdir="."):
     templateLoader = jinja2.FileSystemLoader(searchpath=searchpath)
     env = jinja2.Environment(extensions=['jinja2.ext.loopcontrols'], loader=templateLoader)
 
-    template_vars = dict(network=network, solver_name='primordial')
+    template_vars = dict(network=network, solver_name=solver_name)
 
     print(searchpath)
     #templateFiles  = list(map(os.path.basename,
