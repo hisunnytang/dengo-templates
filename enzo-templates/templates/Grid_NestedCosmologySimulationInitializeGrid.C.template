@@ -122,7 +122,7 @@ int grid::NestedCosmologySimulationInitializeGrid(
     DINum, DIINum, HDINum, MetalNum, MetalIaNum;
 
   /* BeginDengo */
-  int {% for s in network.chemical_species -%}
+  int {% for s in network.chemical_species | sort -%}
   {{s.name}}Num
   {%- if not loop.last -%}, {%- endif %}
   {% endfor %};

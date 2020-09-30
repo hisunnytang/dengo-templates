@@ -374,7 +374,7 @@ int EnzoProblemType::InitializeUniformGrid(
 
     /* BeginDengo */
     if (TestProblemData.DengoChemistryModel){
-        {% for s in network.chemical_species %}
+        {% for s in network.chemical_species | sort %}
         tg->BaryonField[{{s.name}}Num][i] = TestProblemData.{{s.name}}_FractionByMass* tg->BaryonField[{{s.name}}Num][i]* UniformDensity;
         {%- endfor -%}
     }

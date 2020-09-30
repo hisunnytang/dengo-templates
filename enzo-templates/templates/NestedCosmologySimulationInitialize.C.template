@@ -747,7 +747,7 @@ int NestedCosmologySimulationInitialize(FILE *fptr, FILE *Outfptr,
 
    
     if (TestProblemData.DengoChemistryModel){
-        {%- for s in network.chemical_species %}
+        {%- for s in network.chemical_species | sort %}
         DataLabel[i++] = "{{s.name}}Density";
         {%- endfor %}
     }

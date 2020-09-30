@@ -2,8 +2,8 @@
   /
   /  GRID CLASS (WRAP THE DENGO CHEMISTRY SOLVER)
   /
-  /  written by: Britton Smith
-  /  date:       April, 2013
+  /  written by: Sunny Tang
+  /  date:       April, 2020
   /  modified1:
   /
   /  PURPOSE: Solve chemistry and cooling with dengo.
@@ -33,10 +33,10 @@ int GetUnits(float *DensityUnits, float *LengthUnits,
         float *VelocityUnits, FLOAT Time);
 int FindField(int field, int farray[], int numfields);
 
+#ifdef USE_DENGO
 int grid::DengoWrapper()
 {
 
-#ifdef USE_DENGO
 
     if (ProcessorNumber != MyProcessorNumber)
         return SUCCESS;
@@ -44,7 +44,7 @@ int grid::DengoWrapper()
     LCAPERF_START("grid_DengoWrapper");
 
     int DensNum, GENum, Vel1Num, Vel2Num, Vel3Num, TENum;
-    {%- for s in network.required_species %}
+    {%- for s in network.chemical_species | sort%}
     int {{s.name}}Num;
     {%- endfor %}
 
@@ -82,17 +82,17 @@ dt_cool = (grackle_data->radiative_transfer_intermediate_step == TRUE) ? dtPhoto
 
     /* Find Multi-species fields. */
     // Define the index here by dengo
-    {%- for sp in network.required_species | sort %}
+    {%- for sp in network.chemical_species | sort %}
     {{sp.name}}Num = 0;
     {%- endfor %}
 
     // TODO: fixed the identifyspeciesfields
     /* Find Multi-species fields. */
     if (IdentifyDengoSpeciesFields(
-                    {%- for s in network.chemical_species | sort -%} 
-                    {{s.name}}Num
-                    {%- if not loop.last %}, {%- endif %}
-                    {%- endfor %}) == FAIL)
+                {%- for s in network.chemical_species | sort -%} 
+                {{s.name}}Num
+                {%- if not loop.last %}, {%- endif %}
+                {%- endfor %}) == FAIL)
     {
         ENZO_FAIL("Error in grid->IdentifyDengoSpeciesFields.\n");
     }
@@ -244,7 +244,7 @@ dt_cool = (grackle_data->radiative_transfer_intermediate_step == TRUE) ? dtPhoto
     my_fields.grid_dimension = g_grid_dimension;
 
     my_fields.reltol = dengo_reltol;
-    my_fields.floor_value = 1.0e-20;
+    my_fields.floor_value = 1.0e-30;
 
     // I guess the offset are like arr[k][j][i]
     Eint32 offset = 0;// xdim*ydim* zs + ydim* ys + xs;
@@ -256,7 +256,7 @@ dt_cool = (grackle_data->radiative_transfer_intermediate_step == TRUE) ? dtPhoto
     my_fields.ge_density      = thermal_energy; // 0 offset by construct
 
     my_fields.density = ((double*)density + offset);
-    {%- for s in network.required_species | sort %}
+    {%- for s in network.chemical_species | sort %}
     my_fields.{{s.name}}_density = ((double *) BaryonField[{{s.name}}Num] + offset);
     {%- endfor %}
 
@@ -330,15 +330,6 @@ dt_cool = (grackle_data->radiative_transfer_intermediate_step == TRUE) ? dtPhoto
         delete [] thermal_energy;
     }
 
-    /*
-#ifdef TRANSFER
-if (RadiativeTransfer){
-// convert the RT units back to Enzo
-for(i = 0; i < size; i ++) BaryonField[gammaNum][i] /= rtunits;
-
-}
-#endif TRANSFER
-     */
 
     delete [] g_grid_dimension;
     delete [] g_grid_start;
@@ -346,6 +337,7 @@ for(i = 0; i < size; i ++) BaryonField[gammaNum][i] /= rtunits;
 
     LCAPERF_STOP("grid_DengoWrapper");
 
-#endif
     return SUCCESS;
 }
+#endif
+
