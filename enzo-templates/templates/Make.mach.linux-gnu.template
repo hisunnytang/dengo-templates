@@ -36,12 +36,12 @@ MACH_FILE  = Make.mach.linux-gnu
 # Install paths (local variables)
 #-----------------------------------------------------------------------
 
-LOCAL_HDF5_INSTALL    = /usr
+LOCAL_HDF5_INSTALL    = {{network._hdf5_path}}
 LOCAL_GRACKLE_INSTALL = /home/kwoksun2/grackle_install
 LOCAL_HYPRE_INSTALL   = /PATH/TO/HYPRE/INSTALL   # optional
 
-LOCAL_DENGO_INSTALL = /home/kwoksun2/dengo/dengo_install
-LOCAL_CVODE_INSTALL = /home/kwoksun2/dengo/cvode-3.1.0/instdir
+LOCAL_DENGO_INSTALL = {{network._dengo_install_path}}
+LOCAL_CVODE_INSTALL = {{network._cvode_path}}
 #-----------------------------------------------------------------------
 # Compiler settings
 #-----------------------------------------------------------------------
@@ -96,7 +96,7 @@ MACH_OPT_AGGRESSIVE  = -O3 -g
 #-----------------------------------------------------------------------
 
 LOCAL_INCLUDES_MPI    = # MPI includes
-LOCAL_INCLUDES_HDF5   = -I$(LOCAL_HDF5_INSTALL) # HDF5 includes
+LOCAL_INCLUDES_HDF5   = -I$(LOCAL_HDF5_INSTALL)/include # HDF5 includes
 LOCAL_INCLUDES_HYPRE  = -I$(LOCAL_HYPRE_INSTALL)/include
 LOCAL_INCLUDES_PAPI   = # PAPI includes
 LOCAL_INCLUDES_GRACKLE = -I$(LOCAL_GRACKLE_INSTALL)/include
@@ -114,7 +114,7 @@ MACH_INCLUDES_GRACKLE = $(LOCAL_INCLUDES_GRACKLE)
 #-----------------------------------------------------------------------
 
 LOCAL_LIBS_MPI    = # MPI libraries
-LOCAL_LIBS_HDF5   = -L$(LOCAL_HDF5_INSTALL)/lib64 -lhdf5 -lz
+LOCAL_LIBS_HDF5   = -L$(LOCAL_HDF5_INSTALL)/lib -lhdf5 -lz
 LOCAL_LIBS_HYPRE  = -L$(LOCAL_HYPRE_INSTALL)/lib -lHYPRE
 LOCAL_LIBS_PAPI   = # PAPI libraries
 LOCAL_LIBS_MACH   = -lgfortran # Machine-dependent libraries
