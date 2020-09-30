@@ -119,11 +119,7 @@ def walkTemplateFiles(searchpath, outputdir):
             if not os.path.exists(outsubdir):
                 os.mkdir(outsubdir)
 
-            print(filepath, relpath)
             templateRelPath += [relpath]
-
-    for i in os.walk(outputdir):
-        print(i)
 
     return templateRelPath
 

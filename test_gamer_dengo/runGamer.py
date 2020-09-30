@@ -2,9 +2,12 @@ from generateGamerTemplates import setup_primordial_network, write_from_template
 from jinja2 import Environment, BaseLoader
 import os
 import subprocess
+"""Run Gamer from scratch with Dengo.
 
+"""
 
-def cloneDengoBranch(newName = None, gamerFork = "https://github.com/hisunnytang/gamer-fork"):
+def clone_dengo_branch(newName = None, gamerFork = "https://github.com/hisunnytang/gamer-fork"):
+    """Clone dengo branch into new name."""
     cloneDengoBranch = f"git clone -b dengo {gamerFork}"
     if newName is not None:
         cloneDengoBranch += f" {newName}"
@@ -15,18 +18,24 @@ def cloneDengoBranch(newName = None, gamerFork = "https://github.com/hisunnytang
     out = subprocess.run(cloneDengoBranch, check=True)
 
 
-def writeGamerTemplates(network = None, solver_name="dengo-primordial"):
+def write_simulation_templates(network = None, simulation='gamer', solver_name="dengo-primordial"):
+    """Write necessary simulations files for Dengo."""
+
+    supported_simulations = ['enzo', 'gamer']
+
     if network is None:
         network = setup_primordial_network()
-    # write Gamer templates
-    outfiledir = "autogen_gamer_templates"
+    if simulations not in supported_simulations:
+        raise Exception(f"{simulation} templates not supported")
+    outfiledir = f"autogen_{simulation}_templates"
     if not os.path.exists(outfiledir):
         os.mkdir(outfiledir)
-    templatedir = "../gamer-templates/templates"
+    templatedir = "../{simulation}-templates/templates"
     write_from_templates(network, solver_name, searchpath=templatedir, outdir=outfiledir)
 
 
 def appendIncludeFile(network, solver_name='dengo_primordial', gamer_dir="gamer-fork"):
+    """Add index for passive scalars and dengo header to gamer includes."""
     dengo_dir = f"{gamer_dir}/{solver_name}"
     GAMER_H_template = f"""\n#ifdef SUPPORT_DENGO\n#include "{solver_name}_solver.h"\n#endif\n"""
 
@@ -70,15 +79,15 @@ def appendIncludeFile(network, solver_name='dengo_primordial', gamer_dir="gamer-
         f.seek(0)
         f.writelines(contents)
 
-def writeDengoNetwork(network= None, gamerdir = None,solver_name="dengo_primordial", solver = "be_chem_solve"):
+def writeDengoNetwork(network= None, simudir = None,solver_name="dengo_primordial", solver = "be_chem_solve"):
     # write our Dengo Chemistry solver
     # and compile it
     if network is None:
         network = setup_primordial_network()
 
-    if gamerdir is None:
-        gamerdir = "gamer-fork"
-    outputdir = f"{gamerdir}/{solver_name}"
+    if simudir is None:
+        simudir = "."
+    outputdir = f"{simudir}/{solver_name}"
 
     if solver == 'be_chem_solve':
         network.write_solver(solver_name,
@@ -193,7 +202,7 @@ def runDengoGAMER (network, gamer_dir,
 
     if write_gamer_files:
         # write the Gamer based on the network
-        writeGamerTemplates(network, solver_name)
+        write_simulation_templates(network, solver_name, simulation='gamer')
         # copy the Gamer templates to the Repo
         moveGamerTemplates(gamer_dir = gamer_dir)
         # append the include file
@@ -223,6 +232,6 @@ if __name__ == "__main__":
 
     # build a chemical network
     network = setup_primordial_network()
-    runDengoGAMER(network, gamer_dir, solver_option='sundials')
+    #runDengoGAMER(network, gamer_dir, solver_option='sundials')
     #runDengoGAMER(network, gamer_dir, solver_option='be_chem_solve')
-    #runGrackleGAMER(gamer_dir, simu_dir="playground_grackle")
+    runGrackleGAMER(gamer_dir, simu_dir="playground_grackle")
