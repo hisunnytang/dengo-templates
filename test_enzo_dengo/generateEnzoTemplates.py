@@ -10,10 +10,6 @@ import jinja2
 import sys
 import glob
 
-os.environ['HDF5_PATH'] = '/home/kwoksun2/anaconda3'
-os.environ['DENGO_INSTALL_PATH'] = '/home/kwoksun2/dengo_install'
-os.environ['CVODE_PATH'] = "/home/kwoksun2/dengo-merge/cvode-3.1.0/instdir"
-os.environ['SUITESPARSE_PATH'] = "/home/kwoksun2/SuiteSparse"
 
 def setup_primordial_network():
     """Initial a ChemicalNetwork object
@@ -78,21 +74,29 @@ def setup_primordial_network():
     return primordial
 
 
-def write_network(network):
-
-    network.write_solver("primordial",
-            solver_template="cv_omp/sundials_CVDls",
-            ode_solver_source="initialize_cvode_solver.C",
-            output_dir = 'suitesparse')
-
-
 
 def write_from_templates(network, searchpath=".", outdir="."):
+    """Helper Function to write required files given the ChemicalNetwork
+    
+    Parameters
+    ----------
+    network: 
+        `ChemicalNetwork` object with desired reactions
+    searchpath:
+        the location of the desired hydro integration templates
+    outdir:
+        the directory in which the templates files would be saved
+    
+    Returns
+    -------
+    None
+    
+
+    """
     templateLoader = jinja2.FileSystemLoader(searchpath=searchpath)
     env = jinja2.Environment(extensions=['jinja2.ext.loopcontrols'], loader=templateLoader)
 
     template_vars = dict(network=network, solver_name='primordial')
-
     templateFiles = list(map(os.path.basename, glob.glob(os.path.join(searchpath, "*.template"))))
     for infile in templateFiles:
         template_inst = env.get_template(infile)
