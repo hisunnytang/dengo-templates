@@ -40,8 +40,11 @@ LOCAL_HDF5_INSTALL    = {{network._hdf5_path}}
 LOCAL_GRACKLE_INSTALL = /home/kwoksun2/grackle_install
 LOCAL_HYPRE_INSTALL   = /PATH/TO/HYPRE/INSTALL   # optional
 
+
+# Specify Library Paths
 LOCAL_DENGO_INSTALL = {{network._dengo_install_path}}
 LOCAL_CVODE_INSTALL = {{network._cvode_path}}
+LOCAL_SUITESPARSE_INSTALL = {{network._suitesparse_path}}
 #-----------------------------------------------------------------------
 # Compiler settings
 #-----------------------------------------------------------------------
@@ -76,10 +79,10 @@ MACH_DEFINES   = -DLINUX -DH5_USE_16_API
 
 
 MACH_CPPFLAGS = -P -traditional 
-MACH_CFLAGS   = 
-MACH_CXXFLAGS =
-MACH_FFLAGS   = -fno-second-underscore -ffixed-line-length-132
-MACH_F90FLAGS = -fno-second-underscore
+MACH_CFLAGS   = -fPIC
+MACH_CXXFLAGS = -fPIC
+MACH_FFLAGS   = -fno-second-underscore -ffixed-line-length-132 -fPIC
+MACH_F90FLAGS = -fno-second-underscore -fPIC
 MACH_LDFLAGS  = 
 
 #-----------------------------------------------------------------------
@@ -119,7 +122,7 @@ LOCAL_LIBS_HYPRE  = -L$(LOCAL_HYPRE_INSTALL)/lib -lHYPRE
 LOCAL_LIBS_PAPI   = # PAPI libraries
 LOCAL_LIBS_MACH   = -lgfortran # Machine-dependent libraries
 LOCAL_LIBS_GRACKLE = -L$(LOCAL_GRACKLE_INSTALL)/lib -lgrackle
-LOCAL_LIBS_DENGO   = -L$(LOCAL_DENGO_INSTALL)/lib -ldengo
+LOCAL_LIBS_DENGO   = -L$(LOCAL_DENGO_INSTALL)/lib -ldengo -Wl,-rpath-link=$(LOCAL_SUITESPARSE_PATH) -Wl,-rpath-link=$(LOCAL_CVODE_PATH)
 
 MACH_LIBS         = $(LOCAL_LIBS_HDF5) $(LOCAL_LIBS_MACH)
 MACH_LIBS_MPI     = $(LOCAL_LIBS_MPI)
