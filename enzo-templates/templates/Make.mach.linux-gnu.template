@@ -122,7 +122,7 @@ LOCAL_LIBS_HYPRE  = -L$(LOCAL_HYPRE_INSTALL)/lib -lHYPRE
 LOCAL_LIBS_PAPI   = # PAPI libraries
 LOCAL_LIBS_MACH   = -lgfortran # Machine-dependent libraries
 LOCAL_LIBS_GRACKLE = -L$(LOCAL_GRACKLE_INSTALL)/lib -lgrackle
-LOCAL_LIBS_DENGO   = -L$(LOCAL_DENGO_INSTALL)/lib -ldengo -Wl,-rpath-link=$(LOCAL_SUITESPARSE_PATH) -Wl,-rpath-link=$(LOCAL_CVODE_PATH)
+LOCAL_LIBS_DENGO   = -L$(LOCAL_DENGO_INSTALL)/lib -ldengo -lhdf5_hl -Wl,-rpath-link=$(LOCAL_SUITESPARSE_PATH)/lib -Wl,-rpath-link=$(LOCAL_CVODE_PATH)/lib
 
 MACH_LIBS         = $(LOCAL_LIBS_HDF5) $(LOCAL_LIBS_MACH)
 MACH_LIBS_MPI     = $(LOCAL_LIBS_MPI)
