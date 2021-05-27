@@ -8,7 +8,7 @@ helper function to generate templates for hydro simulations
 
 ## Outline of what `generateEnzoTemplates.py` does
 1. Initialize an `Dengo` `ChemicalNetwork` object with all the reactions and rates
-2. Based on the reactions and chemical cooling/ heating, the required scripts are generated from pre-written enzo templates files. (Currently it works with the particular commit: `8f75306d89476ed897228e39e604f4769add217b`. Checkout this particular commit for a working integration. We will work to incorporate it to more recent versions of Enzo).
+2. Based on the reactions and chemical cooling/ heating, the required scripts are generated from pre-written enzo templates files. (Currently it works with the particular commit: `git checkout d84c2415b7914c7bab729c2d818b5af8c85c1918`. Checkout this particular commit for a working integration. We will work to incorporate it to more recent versions of Enzo).
 3. The templates written based on `Dengo` are placed in `templatedir` 
 4. They can then be placed in the directory `enzo-dev/src/enzo`
 
